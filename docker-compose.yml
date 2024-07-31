@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgres-service:
+    hostname: postgres
+    image: postgres
+    container_name: postgres-container
+    restart: always
+    networks:
+      - my_network
+    ports:
+      - '5435:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=k8s_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer-service:
+    hostname: adminer
+    image: adminer
+    container_name: adminer-container
+    restart: always
+    networks:
+      - my_network
+    ports:
+      - '8080:8080'
+    depends_on:
+      - postgres-service
+
+  spring-app-service:
+    hostname: spring-app
+    image: mahammad55/kubernetes-deployment:1.0
+    container_name: spring-app-container
+    restart: always
+    networks:
+      - my_network
+    ports:
+      - '8086:8085'
+    environment:
+      - DB_CONNECTION_IP=postgres-service
+      - DB_CONNECTION_PORT=5432
+      - DB_CONNECTION_DATABASE=k8s_db
+      - DB_CONNECTION_USERNAME=postgres
+      - DB_CONNECTION_PASSWORD=password
+
+volumes:
+  postgres_data: { }
+
+networks:
+  my_network: { }

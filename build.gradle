@@ -1,0 +1,70 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.2'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.bmuschko.docker-remote-api' version "${dockerVersion}" apply false
+}
+
+group = 'az.ingress'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.modelmapper:modelmapper:2.1.1'
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'org.postgresql:postgresql'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+task dockerFile(dependsOn: ['assemble'], type: Dockerfile) {
+    doLast {
+        println "Docker file creating"
+    }
+    destFile.set(project.file('Dockerfile'))
+    from "openjdk:17"
+    copyFile "build/libs/${project.name}-${project.version}.jar", "/app/"
+    workingDir "/app/"
+    entryPoint "java"
+    defaultCommand "-jar", "/app/${project.name}-${project.version}.jar"
+}
+
+task dockerBuild(dependsOn: dockerFile, type: Exec) {
+    doLast {
+        println("Creating image ${dockerRepoUrl}/${project.name}: ${projectVersion}")
+    }
+    commandLine "docker", "build", ".", "-t", "${dockerRepoUrl}/${project.name}:${projectVersion}"
+}
+
+task dockerPush(dependsOn: dockerBuild, type: Exec) {
+    doLast {
+        println("Pushing image ${dockerRepoUrl}/${project.name}: ${projectVersion}")
+    }
+    commandLine "docker", "push", "${dockerRepoUrl}/${project.name}:${projectVersion}"
+}

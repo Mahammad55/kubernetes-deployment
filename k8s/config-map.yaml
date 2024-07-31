@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-config-map
+data:
+  DB_CONNECTION_IP: "postgres-service"
+  DB_CONNECTION_DATABASE: "k8s_db"
+  DB_CONNECTION_SCHEMA: "public"
+  DB_CONNECTION_USERNAME: "postgres"
+  DB_CONNECTION_PASSWORD: "password"

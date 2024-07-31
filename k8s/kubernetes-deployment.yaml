@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubernetes-deployment
+  labels:
+    app: kubernetes-deployment-label
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kubernetes-deployment-selector
+  template:
+    metadata:
+      labels:
+        app: kubernetes-deployment-selector
+    spec:
+      containers:
+        - name: kubernetes-container
+          image: mahammad55/kubernetes-deployment:1.0
+          ports:
+            - containerPort: 8085
+          envFrom:
+            - configMapRef:
+                name: kubernetes-config-map
